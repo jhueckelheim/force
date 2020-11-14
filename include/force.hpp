@@ -37,6 +37,32 @@ class freal{
   public:
     freal<T>(T value, T error) : value(value), error(error) { }
     freal<T>(T value) : value(value), error((T)0) { }
+    freal<T>() : value((T)0), error((T)0) { }
+    void operator+=(freal<T> rhs) {
+      T value = this->value + rhs.value;
+      T localerror = freal<T>::addition_error(this->value,rhs.value,value);
+      this->value = value;
+      this->error += rhs.error + localerror;
+    }
+    void operator-=(freal<T> rhs) {
+      T value = this->value - rhs.value;
+      T localerror = freal<T>::addition_error(this->value,-rhs.value,value);
+      this->value = value;
+      this->error -= rhs.error + localerror;
+    }
+    void operator*=(freal<T> rhs) {
+      T value = this->value * rhs.value;
+      T localerr = freal<T>::multiplication_error(this->value,rhs.value,value);
+      this->error = this->value*rhs.error+this->error*rhs.value + localerr;
+      this->value = value;
+    }
+    void operator/=(freal<T> rhs) {
+      T recip = 1.0 / rhs.value;
+      T newval = this->value * recip;
+      T localerr = division_error_fl(this->value,rhs.value,newval);
+      this->value = newval;
+      this->error = recip*this->error - recip*newval*rhs.error + localerr;
+    }
 
   template <typename T1>
   friend freal<T1> operator+(const freal<T1> &g1,const freal<T1> &g2);
@@ -80,7 +106,7 @@ freal<T> operator-(const freal<T> &g1){
 template<typename T>
 freal<T> operator*(const freal<T> &g1,const freal<T> &g2){
    T value = g1.value * g2.value;
-   T localerr = freal<T>::multiplication_error_fl(g1.value,g2.value,value);
+   T localerr = freal<T>::multiplication_error(g1.value,g2.value,value);
    T error = g1.value*g2.error+g1.error*g2.value + localerr;
    return freal<T>(value,error);
 }

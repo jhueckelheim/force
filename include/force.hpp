@@ -5,6 +5,7 @@ template<typename T>
 class freal{
   private:
     T value, error;
+    #ifdef _CLASSIC_CENA_ADDITION
     static T addition_error(T a, T b, T x) {
         if (fabs(a) >= fabs(b)) {
             return (x - a) - b;
@@ -12,6 +13,13 @@ class freal{
             return (x - b) - a;
         }
     }
+    #else
+    static T addition_error(T a, T b, T x) {
+        // addition error without branching, as in Ogita et al: "ACCURATE SUM AND DOT PRODUCT"
+        T corr = x - a;
+        return ((x-corr)-a)+(corr-b);
+    }
+    #endif
 
     static T multiplication_error(T a, T b, T x, int m) {
       T au, al, bu, bl;
@@ -22,10 +30,6 @@ class freal{
       return x - au*bu - (au*bl + al*bu) - al*bl;
     }
 
-    static T division_error(T a, T b, T x) {
-      return (x*b - a - multiplication_error(x, b, x*b)) / b;
-    }
-
     static float multiplication_error(float a, float b, float x) {
       return multiplication_error(a,b,x,4097); //pow(2,mantissalength/2) + 1;
     }
@@ -34,25 +38,29 @@ class freal{
       return multiplication_error(a,b,x,67108865); //pow(2,mantissalength/2) + 1;
     }
 
+    static T division_error(T a, T b, T x) {
+      return (x*b - a - multiplication_error(x, b, x*b)) / b;
+    }
+
   public:
     freal<T>(T value, T error) : value(value), error(error) { }
     freal<T>(T value) : value(value), error((T)0) { }
     freal<T>() : value((T)0), error((T)0) { }
     void operator+=(freal<T> rhs) {
       T value = this->value + rhs.value;
-      T localerror = freal<T>::addition_error(this->value,rhs.value,value);
+      T localerror = addition_error(this->value,rhs.value,value);
       this->value = value;
       this->error += rhs.error + localerror;
     }
     void operator-=(freal<T> rhs) {
       T value = this->value - rhs.value;
-      T localerror = freal<T>::addition_error(this->value,-rhs.value,value);
+      T localerror = addition_error(this->value,-rhs.value,value);
       this->value = value;
       this->error -= rhs.error + localerror;
     }
     void operator*=(freal<T> rhs) {
       T value = this->value * rhs.value;
-      T localerr = freal<T>::multiplication_error(this->value,rhs.value,value);
+      T localerr = multiplication_error(this->value,rhs.value,value);
       this->error = this->value*rhs.error+this->error*rhs.value + localerr;
       this->value = value;
     }

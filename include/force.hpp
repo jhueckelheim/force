@@ -2,10 +2,10 @@
 #include <math.h>
 
 template<typename T>
-class ForceFloat {
+class freal{
   private:
     T value, error;
-    T addition_error(T a, T b, T x) {
+    static T addition_error(T a, T b, T x) {
         if (fabs(a) >= fabs(b)) {
             return (x - a) - b;
         } else {
@@ -13,7 +13,7 @@ class ForceFloat {
         }
     }
 
-    T multiplication_error(T a, T b, T x, int m) {
+    static T multiplication_error(T a, T b, T x, int m) {
       T au, al, bu, bl;
       au = (a - a*m) + a*m;
       al = a - au;
@@ -22,68 +22,90 @@ class ForceFloat {
       return x - au*bu - (au*bl + al*bu) - al*bl;
     }
 
-    float multiplication_error(float a, float b, float x) {
+    static T division_error(T a, T b, T x) {
+      return (x*b - a - multiplication_error(x, b, x*b)) / b;
+    }
+
+    static float multiplication_error(float a, float b, float x) {
       return multiplication_error(a,b,x,4097); //pow(2,mantissalength/2) + 1;
     }
 
-    double multiplication_error(double a, double b, double x) {
+    static double multiplication_error(double a, double b, double x) {
       return multiplication_error(a,b,x,67108865); //pow(2,mantissalength/2) + 1;
     }
 
   public:
-    ForceFloat<T>(T value, T error) : value(value), error(error) { }
-    ForceFloat<T>(T value) : value(value), error((T)0) { }
+    freal<T>(T value, T error) : value(value), error(error) { }
+    freal<T>(T value) : value(value), error((T)0) { }
 
-    ForceFloat<T> operator+(const ForceFloat<T> &g1,const ForceFloat<T> &g2){
-      T value = g1.value + g2.value;
-      T localerror = addition_error(g1.value,g2.value,value);
-      T error = g1.error + g2.error + localerror;
-      return ForceFloat<T>(value,error);
-    }
+  template <typename T1>
+  friend freal<T1> operator+(const freal<T1> &g1,const freal<T1> &g2);
+  template <typename T1>
+  friend freal<T1> operator-(const freal<T1> &g1,const freal<T1> &g2);
+  template <typename T1>
+  friend freal<T1> operator-(const freal<T1> &g1);
+  template <typename T1>
+  friend freal<T1> operator*(const freal<T1> &g1,const freal<T1> &g2);
+  template <typename T1>
+  friend freal<T1> operator/(const freal<T1> &g1,const freal<T1> &g2);
+  template <typename T1>
+  friend freal<T1> sin(const freal<T1> &);
+  template <typename T1>
+  friend freal<T1> cos(const freal<T1> &);
+  template <typename T1>
+  friend std::ostream& operator<<(std::ostream&, const freal<T1>&);
+};
 
-    ForceFloat<T> operator-(const ForceFloat<T> &g1,const ForceFloat<T> &g2){
-      T value = g1.value - g2.value;
-      T localerror = addition_error(g1.value,-g2.value,value);
-      T error = g1.error - g2.error + localerror;
-      return ForceFloat<T>(value,error);
-    }
-
-    ForceFloat<T> operator-(const ForceFloat<T> &g1){
-       return ForceFloat<T>(-g1.value,g1.error);
-    }
-
-    ForceFloat<T> operator*(const ForceFloat<T> &g1,const ForceFloat<T> &g2){
-       T value = g1.value * g2.value;
-       T localerr = multiplication_error_fl(g1.value,g2.value,value);
-       T error = g1.value*g2.error+g1.error*g2.value + localerr;
-       return ForceFloat<T>(value,error);
-    }
-
-    ForceFloat<T> operator/(const ForceFloat<T> &g1,const ForceFloat<T> &g2){
-       T recip,newval;
-       recip = 1.0 / g2.value;
-       newval = g1.value * recip;
-       T localerr = division_error_fl(g1.value,g2.value,newval);
-       return ForceFloat<T>(newval,recip*g1.error - recip*newval*g2.error + localerr);
-    }
-
-  friend std::ostream& operator<<(std::ostream&, const ForceFloat<T>&);
-  friend ForceFloat<T> sin(const ForceFloat<T> &);
-  friend ForceFloat<T> cos(const ForceFloat<T> &);
+template<typename T>
+freal<T> operator+(const freal<T> &g1,const freal<T> &g2){
+  T value = g1.value + g2.value;
+  T localerror = freal<T>::addition_error(g1.value,g2.value,value);
+  T error = g1.error + g2.error + localerror;
+  return freal<T>(value,error);
 }
 
 template<typename T>
-ForceFloat<T> sin(const ForceFloat<T> &g1){
+freal<T> operator-(const freal<T> &g1,const freal<T> &g2){
+  T value = g1.value - g2.value;
+  T localerror = freal<T>::addition_error(g1.value,-g2.value,value);
+  T error = g1.error - g2.error + localerror;
+  return freal<T>(value,error);
+}
+
+template<typename T>
+freal<T> operator-(const freal<T> &g1){
+   return freal<T>(-g1.value,g1.error);
+}
+
+template<typename T>
+freal<T> operator*(const freal<T> &g1,const freal<T> &g2){
+   T value = g1.value * g2.value;
+   T localerr = freal<T>::multiplication_error_fl(g1.value,g2.value,value);
+   T error = g1.value*g2.error+g1.error*g2.value + localerr;
+   return freal<T>(value,error);
+}
+
+template<typename T>
+freal<T> operator/(const freal<T> &g1,const freal<T> &g2){
+   T recip,newval;
+   recip = 1.0 / g2.value;
+   newval = g1.value * recip;
+   T localerr = freal<T>::division_error_fl(g1.value,g2.value,newval);
+   return freal<T>(newval,recip*g1.error - recip*newval*g2.error + localerr);
+}
+
+template<typename T>
+freal<T> sin(const freal<T> &g1){
   return afloat(sin(g1.value),cos(g1.value)*g1.error);
 }
 
 template<typename T>
-ForceFloat<T> cos(const ForceFloat<T> &g1){
+freal<T> cos(const freal<T> &g1){
   return afloat(cos(g1.value),-sin(g1.value)*g1.error);
 }
 
 template<typename T>
-std::ostream& operator<<(std::ostream &ost, const ForceFloat<T> &ad){
+std::ostream& operator<<(std::ostream &ost, const freal<T> &ad){
    ost << "[" << ad.value << ", " << ad.error << ", " << (ad.value - ad.error) << "]";
    return ost;
 }

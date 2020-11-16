@@ -49,6 +49,8 @@ class freal{
     T value() const { return this->val; }
     T error() const { return this->err; }
     T corrected_value() const { return this->val-this->err; }
+    void apply_correction() { this->val = corrected_value(); this->err = 0; }
+    operator T() const { return corrected_value(); }
 
     void operator+=(freal<T> rhs) {
       T value = this->val + rhs.val;
@@ -182,6 +184,11 @@ freal<T> sin(const freal<T> &g1){
 template<typename T>
 freal<T> cos(const freal<T> &g1){
   return freal<T>(cos(g1.val),-sin(g1.val)*g1.err);
+}
+
+template<typename T>
+freal<T> fabs(const freal<T> &g1){
+  return g1>=freal<float>(0.0)?g1:-g1;
 }
 
 template<typename T>

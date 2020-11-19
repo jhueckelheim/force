@@ -49,7 +49,6 @@ class freal{
     T value() const { return this->val; }
     T error() const { return this->err; }
     T corrected_value() const { return this->val-this->err; }
-    void apply_correction() { this->val = corrected_value(); this->err = 0; }
     operator T() const { return corrected_value(); }
 
     void operator+=(freal<T> rhs) {
@@ -76,6 +75,9 @@ class freal{
       T localerr = division_error(this->val,rhs.val,newval);
       this->val = newval;
       this->err = recip*this->err - recip*newval*rhs.err + localerr;
+    }
+    static void ompReduce(freal<T> &omp_out, freal<T> &omp_in) {
+      omp_out += omp_in;
     }
 
   template <typename T1>
@@ -193,7 +195,9 @@ freal<T> fabs(const freal<T> &g1){
 
 template<typename T>
 std::ostream& operator<<(std::ostream &ost, const freal<T> &ad){
-   ost << "[" << ad.value() << ", " << ad.error() << ", " << (ad.corrected_value()) << "]";
-   return ost;
+  ost << "[" << ad.value() << ", " << ad.error() << ", " << (ad.corrected_value()) << "]";
+  return ost;
 }
 
+#pragma omp declare reduction(+ : freal<float> : freal<float>::ompReduce(omp_out, omp_in))
+#pragma omp declare reduction(+ : freal<double> : freal<double>::ompReduce(omp_out, omp_in)) 

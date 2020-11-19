@@ -6,6 +6,7 @@ template <typename T>
 static T**matalloc(int n){
   auto buff = new T[n*n];
   auto a = new T*[n];
+  #pragma omp parallel for
   for(int i = 0; i < n; ++i)
     a[i] = &buff[n*i];
   return a;
@@ -20,13 +21,11 @@ static void matfree(int n, T** mat) {
 // naive matrix multiplication, no Strassen here.
 template <typename T>
 static void matrixMultiply(int n, T**C, T**A, T**B) {
-  for (int i=0; i<n; i++)
-    for (int j=0; j<n; j++)
-      C[i][j] = 0.0;
-
+  #pragma omp parallel for collapse(2)
   for (int i = 0; i < n; i++) {
-    for (int k = 0; k < n; k++) {
-      for (int j = 0; j < n; j++) {
+    for (int j = 0; j < n; j++) {
+      C[i][j] = 0.0;
+      for (int k = 0; k < n; k++) {
 	C[i][j] = C[i][j] + A[i][k] * B[k][j];
       }
     }
@@ -36,6 +35,7 @@ static void matrixMultiply(int n, T**C, T**A, T**B) {
 // adds two nxn matrices.  C is "out" variable.
 template <typename T>
 static void add(int n, T**C, T**A, T**B) {
+  #pragma omp parallel for collapse(2)
   for (int i = 0; i < n; i++)
     for (int j = 0; j < n; j++)
       C[i][j] = A[i][j] + B[i][j];
@@ -44,6 +44,7 @@ static void add(int n, T**C, T**A, T**B) {
 // subtracts two nxn matrices.  C is "out" variable.
 template <typename T>
 static void subtract(int n, T**C, T**A, T**B) {
+  #pragma omp parallel for collapse(2)
   for (int i = 0; i < n; i++)
     for (int j = 0; j < n; j++)
       C[i][j] = A[i][j] - B[i][j];
@@ -90,6 +91,7 @@ static void strassenR(int n, T**C, T**A, T**B) {
     T**c22 = matalloc<T>(newSize);
 
     // dividing the matrices in 4 sub-matrices:
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < newSize; i++) {
       for (int j = 0; j < newSize; j++) {
 	a11[i][j] = A[i][j]; // top left
@@ -149,6 +151,7 @@ static void strassenR(int n, T**C, T**A, T**B) {
     // c22 = p1 + p3 - p2 + p6
 
     // Grouping the results obtained in a single matrix:
+    #pragma omp parallel for collapse(2)
     for (int i = 0; i < newSize; i++) {
       for (int j = 0; j < newSize; j++) {
 	C[i][j] = c11[i][j];

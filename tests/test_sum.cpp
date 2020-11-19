@@ -3,6 +3,20 @@
 #include <random>
 #include <chrono>
 
+template<typename T>
+class KahanReal {
+  public:
+    T sum, cor;
+    KahanReal<T>() : sum(0), cor(0) {}
+    static void ompAdd(KahanReal<T> &omp_out, KahanReal<T> &omp_in) {
+      T y = omp_in.sum - (omp_out.cor + omp_in.cor);
+      T t = omp_out.sum + y;
+      omp_out.cor = (t - omp_out.sum) - y;
+      omp_out.sum = t;
+    }
+};
+#pragma omp declare reduction(+ : KahanReal<float> : KahanReal<float>::ompAdd(omp_out, omp_in))
+
 int main(int argc, char** argv) {
   // Read command line arguments and set up random input data
   if(argc < 3) {
@@ -26,6 +40,7 @@ int main(int argc, char** argv) {
   {
     auto t_start = std::chrono::high_resolution_clock::now();
     float sum = 0;
+    #pragma omp parallel for reduction(+:sum)
     for(int i=0; i<n; i++) {
       sum += sval[i];
     }
@@ -37,6 +52,7 @@ int main(int argc, char** argv) {
   {
     auto t_start = std::chrono::high_resolution_clock::now();
     double sum = 0;
+    #pragma omp parallel for reduction(+:sum)
     for(int i=0; i<n; i++) {
       sum += dval[i];
     }
@@ -48,6 +64,7 @@ int main(int argc, char** argv) {
   {
     auto t_start = std::chrono::high_resolution_clock::now();
     freal<float> sum = 0;
+    #pragma omp parallel for reduction(+:sum)
     for(int i=0; i<n; i++) {
       sum += fval[i];
     }
@@ -69,6 +86,21 @@ int main(int argc, char** argv) {
     auto t_end = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration<double, std::milli>(t_end-t_start).count();
     std::cout<<"kahan_sum "<<sum<<" time "<<elapsed<<std::endl;
+  }
+  // Benchmark single precision parallel Kahan summation
+  {
+    auto t_start = std::chrono::high_resolution_clock::now();
+    KahanReal<float> sum;
+    #pragma omp parallel for reduction(+:sum)
+    for(int i=0; i<n; i++) {
+      float y = sval[i] - sum.cor;
+      float t = sum.sum + y;
+      sum.cor = (t - sum.sum) - y;
+      sum.sum = t;
+    }
+    auto t_end = std::chrono::high_resolution_clock::now();
+    double elapsed = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    std::cout<<"kahan_sum "<<sum.sum<<" time "<<elapsed<<std::endl;
   }
 
   // Clean up and exit.

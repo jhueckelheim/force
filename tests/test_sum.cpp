@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     }
     auto t_end = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-    std::cout<<"kahan_sum "<<sum<<" time "<<elapsed<<std::endl;
+    std::cout<<"kahan_serl "<<sum<<" time "<<elapsed<<std::endl;
   }
   // Benchmark single precision parallel Kahan summation
   {
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
     }
     auto t_end = std::chrono::high_resolution_clock::now();
     double elapsed = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-    std::cout<<"kahan_sum "<<sum.sum<<" time "<<elapsed<<std::endl;
+    std::cout<<"kahan_prll "<<sum.sum<<" time "<<elapsed<<std::endl;
   }
 
   // Clean up and exit.

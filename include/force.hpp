@@ -36,12 +36,10 @@ class freal{
 
     static float multiplication_error(float a, float b, float x) {
       return multiplication_error(a,b,x,4097); //pow(2,mantissalength/2) + 1;
-
     }
 
     static double multiplication_error(double a, double b, double x) {
       return multiplication_error(a,b,x,67108865); //pow(2,mantissalength/2) + 1;
-
     }
 
     static T division_error(T a, T b, T x) {

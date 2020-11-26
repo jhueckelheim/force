@@ -11,8 +11,10 @@
 typedef freal<float> usereal;
 #elif CDBL
 typedef freal<double> usereal;
+#elif CLDB
+typedef freal<long double> usereal;
 #elif MPFR
-typedef mpfrcpp<200> usereal;
+typedef mpfrcpp<MPFRPR> usereal;
 #elif QUAD
 #include <quadmath.h>
 typedef __float128 usereal;
@@ -25,6 +27,8 @@ std::ostream& operator<<(std::ostream &ost, const usereal &ad){
 }
 #elif DBLE
 typedef double usereal;
+#elif LDBL
+typedef long double usereal;
 #else
 typedef float usereal;
 #endif
@@ -239,7 +243,7 @@ int main( int argc, char **argv )
   {
       printf( "\nKernel elapsed time, s: %18.8lf\n", elapsed*1e-6 );
       printf(   "Result validation: " );
-      std::cout<<std::setprecision(20)<<final<<std::endl;
+      std::cout<<std::setprecision(36)<<final<<std::endl;
       std::cout<<"Result expected:   1.03733e+07"<<std::endl;
       //printf(   "Result expected  : 6636045675.12190628\n" );
   }    

@@ -5,7 +5,9 @@
 #include <iostream>
 #include <iomanip>
 
+#ifndef PERFORMANCE
 #include "mpfrcpp_tpl.h"
+#endif
 #include "force.hpp"
 #ifdef CENA
 typedef freal<float> usereal;
@@ -244,8 +246,20 @@ int main( int argc, char **argv )
       printf( "\nKernel elapsed time, s: %18.8lf\n", elapsed*1e-6 );
       printf(   "Result validation: " );
       std::cout<<std::setprecision(36)<<final<<std::endl;
-      std::cout<<"Result expected:   1.03733e+07"<<std::endl;
+      //std::cout<<"Result expected:   1.03733e+07"<<std::endl;
       //printf(   "Result expected  : 6636045675.12190628\n" );
+#ifndef PERFORMANCE
+      mpfrcpp<200> refres("0.66360542925793654656169310762647127495515627161291168407440227e10");
+#ifdef MPFR
+      mpfrcpp<200> thisres = convert<MPFRPR,200>(final);
+#else
+      mpfrcpp<200> thisres(final);
+#endif
+#else
+      usereal refres = 6636045675.12190628;
+      usereal thisres = final;
+#endif
+      std::cout<<"Error            : "<<std::setprecision(36)<<(refres-thisres)<<std::endl;
   }    
 #endif
   

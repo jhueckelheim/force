@@ -4,6 +4,9 @@
 #include <iostream>
 #include <gmp.h>
 #include <mpfr.h>
+#include <quadmath.h>
+#include <stdlib.h>
+#include <stdio.h>
 template <unsigned int MPFRPREC>
 class mpfrcpp{
 public:
@@ -11,9 +14,23 @@ public:
    mpfrcpp() {
       mpfr_init2(value,MPFRPREC);
    }
+   mpfrcpp(const float v) {
+      mpfr_init2(value,MPFRPREC);
+      mpfr_set_flt(value,v,MPFR_RNDN);
+   }
    mpfrcpp(const double v) {
       mpfr_init2(value,MPFRPREC);
       mpfr_set_d(value,v,MPFR_RNDN);
+   }
+   mpfrcpp(const long double v) {
+      mpfr_init2(value,MPFRPREC);
+      mpfr_set_ld(value,v,MPFR_RNDN);
+   }
+   mpfrcpp(const __float128 v) {
+      char buf[128];
+      quadmath_snprintf(buf, sizeof(buf), "%.30Qg", v);
+      mpfr_init2(value,MPFRPREC);
+      mpfr_set_str(value,buf,10,MPFR_RNDN);
    }
    mpfrcpp(const mpfrcpp &v) {
       mpfr_init2(value,MPFRPREC);
@@ -22,6 +39,10 @@ public:
    mpfrcpp(const mpfr_t &v) {
       mpfr_init2(value,MPFRPREC);
       mpfr_set(value,v,MPFR_RNDN);
+   }
+   mpfrcpp(const char* v) {
+      mpfr_init2(value,MPFRPREC);
+      mpfr_set_str(value,v,10,MPFR_RNDN);
    }
    ~mpfrcpp() {
       mpfr_clear(value);
@@ -37,6 +58,14 @@ public:
    }
 };
 
+template<unsigned int fromprec, unsigned int toprec>
+mpfrcpp<toprec> convert(const mpfrcpp<fromprec> &from) {
+   mpfr_t to;
+   mpfr_init2(to,toprec);
+   mpfr_set(to,from.value,MPFR_RNDN);
+   return to;
+}
+
 template<unsigned int MPFRPREC>
 mpfrcpp<MPFRPREC> operator/(const mpfrcpp<MPFRPREC> &g1,const mpfrcpp<MPFRPREC> &g2){
    mpfrcpp<MPFRPREC> res;
@@ -45,7 +74,11 @@ mpfrcpp<MPFRPREC> operator/(const mpfrcpp<MPFRPREC> &g1,const mpfrcpp<MPFRPREC> 
 }
 template<unsigned int MPFRPREC>
 std::ostream& operator<<(std::ostream &ost, const mpfrcpp<MPFRPREC> &ad){
-   ost << mpfr_get_d(ad.value,MPFR_RNDN);
+   char* abc = NULL;
+   mpfr_exp_t i;
+   abc = mpfr_get_str (NULL, &i, 10, 0, ad.value, MPFR_RNDN);
+   ost << "0." << abc << "e" << i;
+   mpfr_free_str(abc);
    return ost;
 }
 template<unsigned int MPFRPREC>

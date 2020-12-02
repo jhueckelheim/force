@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <math.h>
-#include "mpfrcpp_tpl.h"
 
 template<typename T>
 class freal{

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <iomanip>
 
-#ifndef PERFORMANCE
+#ifndef PERF
 #include "mpfrcpp_tpl.h"
 #endif
 #include "force.hpp"
@@ -248,7 +248,7 @@ int main( int argc, char **argv )
       std::cout<<std::setprecision(36)<<final<<std::endl;
       //std::cout<<"Result expected:   1.03733e+07"<<std::endl;
       //printf(   "Result expected  : 6636045675.12190628\n" );
-#ifndef PERFORMANCE
+#ifndef PERF
       mpfrcpp<200> refres("0.66360542925793654656169310762647127495515627161291168407440227e10");
 #ifdef MPFR
       mpfrcpp<200> thisres = convert<MPFRPR,200>(final);

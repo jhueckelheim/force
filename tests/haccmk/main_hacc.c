@@ -5,7 +5,7 @@
 #include <iostream>
 #include <iomanip>
 
-#ifndef PERFORMANCE
+#ifndef PERF
 #include "mpfrcpp_tpl.h"
 #endif
 #include "force.hpp"
@@ -17,14 +17,18 @@ typedef freal<double> usereal;
 typedef freal<long double> usereal;
 #elif MPFR
 typedef mpfrcpp<MPFRPR> usereal;
+#elif CMPFR
+typedef freal<mpfrcpp<MPFRPR>> usereal;
 #elif QUAD
 #include <quadmath.h>
 typedef __float128 usereal;
 usereal sqrt(usereal val) {
-  return sqrtq(val);
+   return sqrtq(val);
 }
-std::ostream& operator<<(std::ostream &ost, const usereal &ad){
-   ost << (double)ad;
+std::ostream& operator<<(std::ostream &ost, const __float128 &ad){
+   char buf[128];
+   quadmath_snprintf(buf, sizeof(buf), "%.36Qg", ad);
+   ost<<buf;
    return ost;
 }
 #elif DBLE
@@ -38,13 +42,13 @@ typedef float usereal;
 void Step10_orig( int count1, usereal xxi, usereal yyi, usereal zzi, usereal fsrrmax2, usereal mp_rsm2, usereal *xx1, usereal *yy1, usereal *zz1, usereal *mass1, usereal *dxi, usereal *dyi, usereal *dzi )
 {
 
-    const usereal ma0 = 0.269327, ma1 = -0.0750978, ma2 = 0.0114808, ma3 = -0.00109313, ma4 = 0.0000605491, ma5 = -0.00000147177;
+    const usereal ma0 = usereal(0.269327), ma1 = usereal(-0.0750978), ma2 = usereal(0.0114808), ma3 = usereal(-0.00109313), ma4 = usereal(0.0000605491), ma5 = usereal(-0.00000147177);
     
-    usereal dxc, dyc, dzc, m, r2, f, xi, yi, zi;
+    usereal dxc, dyc, dzc, m, r2, f, xi, yi, zi, zero, one;
     int j;
 
     xi = 0.; yi = 0.; zi = 0.;
-    usereal zero = 0.0, one = 1.0;
+    zero = 0.0, one = 1.0;
 
     for ( j = 0; j < count1; j++ ) 
     {
@@ -170,7 +174,8 @@ int main( int argc, char **argv )
       
       for ( i = 1; i < n; i++ )
       {
-          usereal ir = 0.01*i;
+          usereal ir;
+          ir = 0.01*i;
           xx[i] = xx[i-1] + dx1;
           yy[i] = yy[i-1] + dy1;
           zz[i] = zz[i-1] + dz1;
@@ -248,10 +253,12 @@ int main( int argc, char **argv )
       std::cout<<std::setprecision(36)<<final<<std::endl;
       //std::cout<<"Result expected:   1.03733e+07"<<std::endl;
       //printf(   "Result expected  : 6636045675.12190628\n" );
-#ifndef PERFORMANCE
+#ifndef PERF
       mpfrcpp<200> refres("0.66360542925793654656169310762647127495515627161291168407440227e10");
 #ifdef MPFR
       mpfrcpp<200> thisres = convert<MPFRPR,200>(final);
+#elif CMPFR
+      mpfrcpp<200> thisres = convert<MPFRPR,200>(final.corrected_value());
 #else
       mpfrcpp<200> thisres(final);
 #endif

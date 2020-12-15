@@ -28,7 +28,7 @@ public:
    }
    mpfrcpp(const __float128 v) {
       char buf[128];
-      quadmath_snprintf(buf, sizeof(buf), "%.30Qg", v);
+      quadmath_snprintf(buf, sizeof(buf), "%.36Qg", v);
       mpfr_init2(value,MPFRPREC);
       mpfr_set_str(value,buf,10,MPFR_RNDN);
    }

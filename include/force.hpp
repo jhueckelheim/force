@@ -25,16 +25,7 @@ class freal{
     }
     #endif
 
-    static T multiplication_error(T a, T b, T x, int m) {
-      T au, al, bu, bl;
-      au = (a - a*m) + a*m;
-      al = a - au;
-      bu = (b - b*m) + b*m;
-      bl = b - bu;
-      return x - au*bu - (au*bl + al*bu) - al*bl;
-    }
-
-    static T multiplication_error(T a, T b, T x, long int m) {
+    static T multiplication_error(T a, T b, T x, T m) {
       T au, al, bu, bl;
       au = (a - a*m) + a*m;
       al = a - au;
@@ -44,15 +35,20 @@ class freal{
     }
 
     static float multiplication_error(float a, float b, float x) {
-      return multiplication_error(a,b,x,4097); //pow(2,mantissalength/2) + 1;
+      return multiplication_error(a,b,x,(float)4097); //pow(2,mantissalength/2) + 1;
     }
 
     static double multiplication_error(double a, double b, double x) {
-      return multiplication_error(a,b,x,67108865); //pow(2,mantissalength/2) + 1;
+      return multiplication_error(a,b,x,(double)67108865); //pow(2,mantissalength/2) + 1;
     }
 
     static long double multiplication_error(long double a, long double b, long double x) {
-      return multiplication_error(a,b,x,4294967297L); //pow(2,mantissalength/2) + 1;
+      return multiplication_error(a,b,x,(long double)4294967297.0L); //pow(2,mantissalength/2) + 1;
+    }
+
+    template<unsigned int prec>
+    static mpfrcpp<prec> multiplication_error(mpfrcpp<prec> a, mpfrcpp<prec> b, mpfrcpp<prec> x) {
+      return multiplication_error(a,b,x,pow(mpfrcpp<prec>(2.0),prec/2)+mpfrcpp<prec>(1.0)); //pow(2,mantissalength/2) + 1;
     }
 
     static T division_error(T a, T b, T x) {
@@ -65,8 +61,8 @@ class freal{
 
   public:
     freal<T>(T value, T error) : val(value), err(error) { }
-    freal<T>(T value) : val(value), err((T)0) { }
-    freal<T>() : val((T)0), err((T)0) { }
+    freal<T>(T value) : val(value), err((T)0.0) { }
+    freal<T>() : val((T)0.0), err((T)0.0) { }
     T value() const { return this->val; }
     T error() const { return this->err; }
     T corrected_value() const { return this->val-this->err; }
@@ -79,7 +75,7 @@ class freal{
     }
     freal<T>& operator=(const T &g1){
       this->val = g1;
-      this->err = (T)0;
+      this->err = (T)0.0;
       return *this;
     }
     void operator+=(const freal<T> rhs) {

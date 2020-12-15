@@ -1,5 +1,5 @@
 CC=g++
-CF=-I../include/ -O3 -std=c++11 -fopenmp
+CF=-I../../include/ -O3 -std=c++11 -fopenmp
 
 run: ./exec_test_operators
 	./exec_test_operators

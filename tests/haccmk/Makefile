@@ -37,25 +37,25 @@ HACCmk_mpfr200: main_hacc.c mysecond.c
 	$(CX) $(CXF) $^ -lmpfr -DMPFR -DMPFRPR=200 -o $@
 
 HACCmk_sgl_p: main_hacc.c mysecond.c
-	$(CX) $(CXF) $^ -lmpfr -DPERF -o $@
+	$(CX) $(CXF) $^  -DPERF -o $@
 
 HACCmk_dble_p: main_hacc.c mysecond.c
-	$(CX) $(CXF) $^ -lmpfr -DPERF -DDBLE -o $@
+	$(CX) $(CXF) $^  -DPERF -DDBLE -o $@
 
 HACCmk_quad_p: main_hacc.c mysecond.c
-	$(CX) $(CXF) $^ -lmpfr -DPERF -lquadmath -DQUAD -o $@
+	$(CX) $(CXF) $^  -DPERF -lquadmath -DQUAD -o $@
 
 HACCmk_cena_p: main_hacc.c mysecond.c
-	$(CX) $(CXF) $^ -lmpfr -DPERF -DCENA -o $@
+	$(CX) $(CXF) $^  -DPERF -DCENA -o $@
 
 HACCmk_cdbl_p: main_hacc.c mysecond.c
-	$(CX) $(CXF) $^ -lmpfr -DPERF -DCDBL -o $@
+	$(CX) $(CXF) $^  -DPERF -DCDBL -o $@
 
 HACCmk_cldb_p: main_hacc.c mysecond.c
-	$(CX) $(CXF) $^ -lmpfr -DPERF -DCLDB -o $@
+	$(CX) $(CXF) $^  -DPERF -DCLDB -o $@
 
 HACCmk_ldbl_p: main_hacc.c mysecond.c
-	$(CX) $(CXF) $^ -lmpfr -DPERF -DLDBL -o $@
+	$(CX) $(CXF) $^ -DPERF -DLDBL -o $@
 
 NUMBERS = $(shell seq 1 1 113) 200
 

@@ -2,6 +2,7 @@
 
 module use /soft/modulefiles
 module load intel/2019
+export LD_LIBRARY_PATH=/soft/compilers/intel-2019/compilers_and_libraries/linux/mkl/lib/intel64_lin:/soft/compilers/intel-2019/compilers_and_libraries/linux/lib/intel64_lin:$PWD
 
 set -x
 

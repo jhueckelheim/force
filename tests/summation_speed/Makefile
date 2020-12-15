@@ -1,5 +1,5 @@
 CC=g++
-CF=-I../../include/ -O3 -std=c++11 -fopenmp
+CF=-I../../include/ -O3 -std=c++11 -fopenmp -lquadmath
 
 run: ./exec_test_sum_classic ./exec_test_sum_nobranch
 	./exec_test_sum_classic 10000000 1000

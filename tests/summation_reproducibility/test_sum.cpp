@@ -8,6 +8,7 @@
 #include <chrono>
 #include <ctime>
 #include <cstdlib>
+#include <unistd.h>
 
 template<typename T>
 T addup(std::vector<long double> dval, int n) {
@@ -41,12 +42,6 @@ T addup_kahan(std::vector<long double> dval, int n) {
   return sum;
 }
 
-inline int rand_upto (int i) {
-  static std::default_random_engine generator{std::random_device{}()};
-  static std::uniform_int_distribution<int> distribution(0, i);
-  return distribution(generator);
-}
-
 int main(int argc, char** argv) {
   // Read command line arguments and set up random input data
   if(argc < 3) {
@@ -69,8 +64,12 @@ int main(int argc, char** argv) {
   }
   // Now we shuffle the vector with numbers. This time we use a seeded
   // random number generator, so that we will add the numbers in a
-  // different order each time this program is run.
-  std::random_shuffle ( dval.begin(), dval.end(), rand_upto );
+  // different order each time this program is run. This seed is a bit
+  // funky, since we run many benchmarks back-to-back and a seed based
+  // only on a low-resolution clock would sometimes remain unchanged
+  // between two runs.
+  srand((time(NULL) & 0xFFFF) | (getpid() << 16));
+  std::random_shuffle ( dval.begin(), dval.end() );
   // Increase output precision for floating point numbers
   std::cout<<std::setprecision(36);
 

@@ -77,7 +77,8 @@ int main(int argc, char** argv) {
   }
   // Increase output precision for floating point numbers
   std::cout<<std::setprecision(36);
-  // Warmup run to make timings consistent
+
+  // Warmup to make timings consistent. The first run is usually slow.
   {
     float sum = benchmark<float>(dval, n, elapsed_time);
     std::cout<<"warmup "<<sum<<" time "<<elapsed_time<<std::endl;
@@ -133,36 +134,6 @@ int main(int argc, char** argv) {
     long double sum = benchmark_kahan<long double>(dval, n, elapsed_time);
     std::cout<<"klongdouble_sum "<<sum<<" time "<<elapsed_time<<std::endl;
   }
-  //// Benchmark single precision Kahan summation
-  //{
-  //  auto t_start = std::chrono::high_resolution_clock::now();
-  //  float sum = 0;
-  //  float cor = 0;
-  //  for(int i=0; i<n; i++) {
-  //    float y = sval[i] - cor;
-  //    float t = sum + y;
-  //    cor = (t - sum) - y;
-  //    sum = t;
-  //  }
-  //  auto t_end = std::chrono::high_resolution_clock::now();
-  //  double elapsed = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-  //  std::cout<<"kahan_serl "<<sum<<" time "<<elapsed<<std::endl;
-  //}
-  //// Benchmark single precision parallel Kahan summation
-  //{
-  //  auto t_start = std::chrono::high_resolution_clock::now();
-  //  KahanReal<float> sum;
-  //  #pragma omp parallel for reduction(+:sum)
-  //  for(int i=0; i<n; i++) {
-  //    float y = sval[i] - sum.cor;
-  //    float t = sum.sum + y;
-  //    sum.cor = (t - sum.sum) - y;
-  //    sum.sum = t;
-  //  }
-  //  auto t_end = std::chrono::high_resolution_clock::now();
-  //  double elapsed = std::chrono::duration<double, std::milli>(t_end-t_start).count();
-  //  std::cout<<"kahan_prll "<<sum.sum<<" time "<<elapsed<<std::endl;
-  //}
 
   // Clean up and exit.
   delete[] dval;

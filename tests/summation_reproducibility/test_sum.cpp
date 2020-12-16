@@ -58,8 +58,9 @@ int main(int argc, char** argv) {
   // Here we generate "random" numbers from an exponential distribution.
   // Note that we do not seed the random engine, and hence the sequence
   // of generated numbers will always be the same between runs of this
-  // program. We use an exponential distribution to get numbers from a
-  // wide range of sizes.
+  // program. We use a custom-made generator for high-resolution random
+  // numbers where all mantissa bits are uniformly random, and the
+  // exponent and sign bits are uniformly random from an allowable range.
   double elapsed_time;
   for(int i=0; i<n; i++) {
     qval.push_back(rand_quad());

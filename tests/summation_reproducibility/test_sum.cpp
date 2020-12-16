@@ -3,18 +3,21 @@
 #include "force.hpp"
 #include "mpfrcpp_tpl.h"
 #include "quadhelper.hpp"
+#include "randomhelper.hpp"
 #include <random>
 #include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <cstdlib>
 #include <unistd.h>
+#include <random>
+#include <iostream>
 
 template<typename T>
-T addup(std::vector<long double> dval, int n) {
+T addup(std::vector<__float128> qval, int n) {
   auto val = new T[n];
   for(int i=0; i<n; i++) {
-    val[i] = (T)dval[i];
+    val[i] = (T)qval[i];
   }
   T sum;
   sum = 0;
@@ -26,12 +29,13 @@ T addup(std::vector<long double> dval, int n) {
 }
 
 template<typename T>
-T addup_kahan(std::vector<long double> dval, int n) {
+T addup_kahan(std::vector<__float128> qval, int n) {
   auto val = new T[n];
   for(int i=0; i<n; i++) {
-    val[i] = (T)dval[i];
+    val[i] = (T)qval[i];
   }
   T sum, cor;
+  sum = 0; cor = 0;
   for(int i=0; i<n; i++) {
     T y = val[i] - cor;
     T t = sum + y;
@@ -50,17 +54,15 @@ int main(int argc, char** argv) {
   }
   int n = atoi(argv[1]);
   float dist = atof(argv[2]);
-  std::vector<long double> dval;
+  std::vector<__float128> qval;
   // Here we generate "random" numbers from an exponential distribution.
   // Note that we do not seed the random engine, and hence the sequence
   // of generated numbers will always be the same between runs of this
   // program. We use an exponential distribution to get numbers from a
   // wide range of sizes.
-  std::default_random_engine generator;
-  std::exponential_distribution<long double> distribution(dist);
   double elapsed_time;
   for(int i=0; i<n; i++) {
-    dval.push_back(distribution(generator));
+    qval.push_back(rand_quad());
   }
   // Now we shuffle the vector with numbers. This time we use a seeded
   // random number generator, so that we will add the numbers in a
@@ -71,61 +73,61 @@ int main(int argc, char** argv) {
   // Sadly, using a C++11 random_device still seems to rely on the time
   // to seed on some machines, so we fall back to good old srand here.
   srand((time(NULL) & 0xFFFF) | (getpid() << 16));
-  std::random_shuffle ( dval.begin(), dval.end() );
+  std::random_shuffle ( qval.begin(), qval.end() );
   // Increase output precision for floating point numbers
   std::cout<<std::setprecision(36);
 
   // Compute high-precision reference result
-  mpfrcpp<200> rsum = addup<mpfrcpp<200>>(dval, n);
+  mpfrcpp<200> rsum = addup<mpfrcpp<200>>(qval, n);
   std::cout<<"reference_sum "<<rsum<<std::endl;
   // Benchmark single precision
   {
-    float sum = addup<float>(dval, n);
+    float sum = addup<float>(qval, n);
     std::cout<<"single_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark double precision
   {
-    double sum = addup<double>(dval, n);
+    double sum = addup<double>(qval, n);
     std::cout<<"double_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark long double precision
   {
-    long double sum = addup<long double>(dval, n);
+    long double sum = addup<long double>(qval, n);
     std::cout<<"longdouble_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark quad precision
   {
-    __float128 sum = addup<__float128>(dval, n);
+    __float128 sum = addup<__float128>(qval, n);
     std::cout<<"quad_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark single precision with CENA
   {
-    freal<float> sum = addup<freal<float>>(dval, n);
+    freal<float> sum = addup<freal<float>>(qval, n);
     std::cout<<"csingle_sum "<<(float)sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark double precision with CENA
   {
-    freal<double> sum = addup<freal<double>>(dval, n);
+    freal<double> sum = addup<freal<double>>(qval, n);
     std::cout<<"cdouble_sum "<<(double)sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark long double precision with CENA
   {
-    freal<long double> sum = addup<freal<long double>>(dval, n);
+    freal<long double> sum = addup<freal<long double>>(qval, n);
     std::cout<<"clongdouble_sum "<<(long double)sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark single precision with Kahan
   {
-    float sum = addup_kahan<float>(dval, n);
+    float sum = addup_kahan<float>(qval, n);
     std::cout<<"ksingle_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark double precision with Kahan
   {
-    double sum = addup_kahan<double>(dval, n);
+    double sum = addup_kahan<double>(qval, n);
     std::cout<<"kdouble_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark long double precision with Kahan
   {
-    long double sum = addup_kahan<long double>(dval, n);
+    long double sum = addup_kahan<long double>(qval, n);
     std::cout<<"klongdouble_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
 

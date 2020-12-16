@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
   // funky, since we run many benchmarks back-to-back and a seed based
   // only on a low-resolution clock would sometimes remain unchanged
   // between two runs.
+  // Sadly, using a C++11 random_device still seems to rely on the time
+  // to seed on some machines, so we fall back to good old srand here.
   srand((time(NULL) & 0xFFFF) | (getpid() << 16));
   std::random_shuffle ( dval.begin(), dval.end() );
   // Increase output precision for floating point numbers

@@ -76,8 +76,14 @@ template<unsigned int MPFRPREC>
 std::ostream& operator<<(std::ostream &ost, const mpfrcpp<MPFRPREC> &ad){
    char* abc = NULL;
    mpfr_exp_t i;
-   abc = mpfr_get_str (NULL, &i, 10, 0, ad.value, MPFR_RNDN);
-   ost << "0." << abc << "e" << i;
+   if(ad >= mpfrcpp<200>(0.0)) {
+     abc = mpfr_get_str (NULL, &i, 10, 0, ad.value, MPFR_RNDN);
+     ost << "0." << abc << "e" << i;
+   }
+   else {
+     abc = mpfr_get_str (NULL, &i, 10, 0, (-ad).value, MPFR_RNDN);
+     ost << "-0." << abc << "e" << i;
+   }
    mpfr_free_str(abc);
    return ost;
 }

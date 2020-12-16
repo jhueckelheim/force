@@ -75,60 +75,58 @@ int main(int argc, char** argv) {
   // Increase output precision for floating point numbers
   std::cout<<std::setprecision(36);
 
+  // Compute high-precision reference result
+  mpfrcpp<200> rsum = addup<mpfrcpp<200>>(dval, n);
+  std::cout<<"reference_sum "<<rsum<<std::endl;
   // Benchmark single precision
   {
     float sum = addup<float>(dval, n);
-    std::cout<<"single_sum "<<sum<<std::endl;
+    std::cout<<"single_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark double precision
   {
     double sum = addup<double>(dval, n);
-    std::cout<<"double_sum "<<sum<<std::endl;
+    std::cout<<"double_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark long double precision
   {
     long double sum = addup<long double>(dval, n);
-    std::cout<<"longdouble_sum "<<sum<<std::endl;
+    std::cout<<"longdouble_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark quad precision
   {
     __float128 sum = addup<__float128>(dval, n);
-    std::cout<<"quad_sum "<<sum<<std::endl;
+    std::cout<<"quad_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark single precision with CENA
   {
     freal<float> sum = addup<freal<float>>(dval, n);
-    std::cout<<"csingle_sum "<<sum<<std::endl;
+    std::cout<<"csingle_sum "<<(float)sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark double precision with CENA
   {
     freal<double> sum = addup<freal<double>>(dval, n);
-    std::cout<<"cdouble_sum "<<sum<<std::endl;
+    std::cout<<"cdouble_sum "<<(double)sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark long double precision with CENA
   {
     freal<long double> sum = addup<freal<long double>>(dval, n);
-    std::cout<<"clongdouble_sum "<<sum<<std::endl;
+    std::cout<<"clongdouble_sum "<<(long double)sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark single precision with Kahan
   {
     float sum = addup_kahan<float>(dval, n);
-    std::cout<<"ksingle_sum "<<sum<<std::endl;
+    std::cout<<"ksingle_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark double precision with Kahan
   {
     double sum = addup_kahan<double>(dval, n);
-    std::cout<<"kdouble_sum "<<sum<<std::endl;
+    std::cout<<"kdouble_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
   // Benchmark long double precision with Kahan
   {
     long double sum = addup_kahan<long double>(dval, n);
-    std::cout<<"klongdouble_sum "<<sum<<std::endl;
-  }
-  // Benchmark long double precision with Kahan
-  {
-    mpfrcpp<200> sum = addup<mpfrcpp<200>>(dval, n);
-    std::cout<<"reference_sum "<<sum<<std::endl;
+    std::cout<<"klongdouble_sum "<<sum<<" err "<<rsum-mpfrcpp<200>(sum)<<std::endl;
   }
 
   return 0;

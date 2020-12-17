@@ -48,12 +48,11 @@ T addup_kahan(std::vector<__float128> qval, int n) {
 
 int main(int argc, char** argv) {
   // Read command line arguments and set up random input data
-  if(argc < 3) {
-    std::cout<<"Usage: exec_test_sum <numvals> <distribution>"<<std::endl;
+  if(argc < 2) {
+    std::cout<<"Usage: exec_test_sum <numvals>"<<std::endl;
     exit(-1);
   }
   int n = atoi(argv[1]);
-  float dist = atof(argv[2]);
   std::vector<__float128> qval;
   // Here we generate "random" numbers from an exponential distribution.
   // Note that we do not seed the random engine, and hence the sequence

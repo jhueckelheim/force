@@ -1,6 +1,10 @@
 #include <iostream>
 #include <math.h>
+#include <chrono>
 #include "force.hpp"
+#include "mpfrcpp_tpl.h"
+
+typedef mpfrcpp<200> realref;
 
 template <typename T>
 static T**matalloc(int n){
@@ -58,9 +62,9 @@ static void subtract(int n, T**C, T**A, T**B) {
 
 // multiplies two nxn matrices, storing result in C
 template <typename T>
-static void strassenR(int n, T**C, T**A, T**B) {
-  if (n <= LEAF_SIZE) {
-    matrixMultiply(n, C, A, B);
+static void strassenR(int n, T**C, T**A, T**B, int leafsize) {
+  if (n <= leafsize) {
+    matrixMultiply<T>(n, C, A, B);
   } else {
     // initializing the new sub-matrices
     int newSize = n / 2;
@@ -108,32 +112,32 @@ static void strassenR(int n, T**C, T**A, T**B) {
     // Calculating p1 to p7:
     add<T>(newSize, aResult, a11, a22);
     add<T>(newSize, bResult, b11, b22);
-    strassenR<T>(newSize, p1, aResult, bResult);
+    strassenR<T>(newSize, p1, aResult, bResult, leafsize);
     // p1 = (a11+a22) * (b11+b22)
 
     add<T>(newSize, aResult, a21, a22); // a21 + a22
-    strassenR<T>(newSize, p2, aResult, b11); // p2 = (a21+a22) * (b11)
+    strassenR<T>(newSize, p2, aResult, b11, leafsize); // p2 = (a21+a22) * (b11)
 
     subtract<T>(newSize, bResult, b12, b22); // b12 - b22
-    strassenR<T>(newSize, p3, a11, bResult);
+    strassenR<T>(newSize, p3, a11, bResult, leafsize);
     // p3 = (a11) * (b12 - b22)
 
     subtract<T>(newSize, bResult, b21, b11); // b21 - b11
-    strassenR<T>(newSize, p4, a22, bResult);
+    strassenR<T>(newSize, p4, a22, bResult, leafsize);
     // p4 = (a22) * (b21 - b11)
 
     add<T>(newSize, aResult, a11, a12); // a11 + a12
-    strassenR<T>(newSize, p5, aResult, b22);
+    strassenR<T>(newSize, p5, aResult, b22, leafsize);
     // p5 = (a11+a12) * (b22)
 
     subtract<T>(newSize, aResult, a21, a11); // a21 - a11
     add<T>(newSize, bResult, b11, b12); // b11 + b12
-    strassenR<T>(newSize, p6, aResult, bResult);
+    strassenR<T>(newSize, p6, aResult, bResult, leafsize);
     // p6 = (a21-a11) * (b11+b12)
 
     subtract<T>(newSize, aResult, a12, a22); // a12 - a22
     add<T>(newSize, bResult, b21, b22); // b21 + b22
-    strassenR<T>(newSize, p7, aResult, bResult);
+    strassenR<T>(newSize, p7, aResult, bResult, leafsize);
     // p7 = (a12-a22) * (b21+b22)
 
     // calculating c21, c21, c11 e c22:
@@ -189,48 +193,110 @@ static void strassenR(int n, T**C, T**A, T**B) {
   }
 }
 
-template <typename T>
-static void fromDouble(T** matout, double** matin, int size) {
-  for(int i=0; i<size; i++) {
-    for(int j=0; j<size; j++) {
-      matout[i][j] = matin[i][j];
+template <typename T, typename Tref, typename Tin>
+void benchmark(int N, int leafsize, Tin** Ain, Tin** Bin, Tref** Rref) {
+  T **A = matalloc<T>(N);
+  T **B = matalloc<T>(N);
+  T **R = matalloc<T>(N);
+  {
+    for(int i=0; i<N; i++) {
+      for(int j=0; j<N; j++) {
+        A[i][j] = Ain[i][j];
+        B[i][j] = Bin[i][j];
+      }
     }
+    auto t_start = std::chrono::high_resolution_clock::now();
+    matrixMultiply<T>(N, R, A, B);
+    auto t_end = std::chrono::high_resolution_clock::now();
+    double time = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    Tref relerrsum = 0.0; 
+    for(int i=0; i<N; i++) {
+      for(int j=0; j<N; j++) {
+        Tref val = (Tref)R[i][j];
+        Tref refval = Rref[i][j];
+        Tref relerr = (val-refval)/refval;
+        relerrsum = relerrsum + fabs(relerr);
+      }
+    }
+    std::cout<<"t_mxm "<<time<<" err "<<relerrsum<<std::endl;
   }
+  {
+    auto t_start = std::chrono::high_resolution_clock::now();
+    strassenR<T>(N, R, A, B, leafsize);
+    auto t_end = std::chrono::high_resolution_clock::now();
+    double time = std::chrono::duration<double, std::milli>(t_end-t_start).count();
+    Tref relerrsum = 0.0; 
+    for(int i=0; i<N; i++) {
+      for(int j=0; j<N; j++) {
+        Tref val = (Tref)R[i][j];
+        Tref refval = Rref[i][j];
+        Tref relerr = (val-refval)/refval;
+        relerrsum = relerrsum + fabs(relerr);
+      }
+    }
+    std::cout<<"         t_str "<<time<<" err "<<relerrsum<<std::endl;
+  }
+  matfree<T>(N,A);
+  matfree<T>(N,B);
+  matfree<T>(N,R);
 }
 
-int main() {
-  real1 **A1 = matalloc<real1>(N);
-  real1 **B1 = matalloc<real1>(N);
-  real1 **R1 = matalloc<real1>(N);
-  real2 **A2 = matalloc<real2>(N);
-  real2 **B2 = matalloc<real2>(N);
-  real2 **R2 = matalloc<real2>(N);
+int main(int argc, char** argv) {
+  if(argc < 2) {
+    std::cout<<"Usage: ./exec <N> [LEAFSIZE]"<<std::endl;
+    exit(-1);
+  }
+  int sleafsize, dleafsize, ldleafsize, qleafsize, csleafsize, cdleafsize, cldleafsize;
+  if(argc == 3) {
+    sleafsize = atoi(argv[2]);
+    dleafsize = sleafsize;
+    ldleafsize = sleafsize;
+    qleafsize = sleafsize;
+    csleafsize = sleafsize;
+    cdleafsize = sleafsize;
+    cldleafsize = sleafsize;
+  }
+  else {
+    sleafsize = 256;
+    dleafsize = 256;
+    ldleafsize = 512;
+    qleafsize = 128;
+    csleafsize = 256;
+    cdleafsize = 128;
+    cldleafsize = 512;
+  }
+  int N = atoi(argv[1]);
+  std::cout<<argv[0]<<" N "<<N<<std::endl;
+
+  realref **Aref = matalloc<realref>(N);
+  realref **Bref = matalloc<realref>(N);
+  realref **Rref = matalloc<realref>(N);
+  __float128 **Aq = matalloc<__float128>(N);
+  __float128 **Bq = matalloc<__float128>(N);
+  __float128 **Rq = matalloc<__float128>(N);
   for(int i=0; i<N; i++) {
     for(int j=0; j<N; j++) {
-      A1[i][j] = (i+j);
-      B1[i][j] = 1.0/(1+i+j);
-      A2[i][j] = (i+j);
-      B2[i][j] = 1.0/(1+i+j);
+      Aq[i][j] = (i+j);
+      Bq[i][j] = 1.0/(1+i+j);
+      Aref[i][j] = (realref)Aq[i][j];
+      Bref[i][j] = (realref)Bq[i][j];
     }
   }
-  matrixMultiply<real1>(N, R1, A1, B1);
-  strassenR<real2>(N, R2, A2, B2);
- 
-  double maxrelerr = 0.0; 
-  for(int i=0; i<N; i++) {
-    for(int j=0; j<N; j++) {
-      double r1val = R1[i][j];
-      double r2val = R2[i][j];
-      double relerr = fabs((r1val-r2val)/r1val);
-      if(relerr > maxrelerr) maxrelerr = relerr;
-    }
-  }
-  std::cout<<"max relative err: "<<maxrelerr<<std::endl;
-  matfree<real1>(N,A1);
-  matfree<real1>(N,B1);
-  matfree<real1>(N,R1);
-  matfree<real2>(N,A2);
-  matfree<real2>(N,B2);
-  matfree<real2>(N,R2);
+  strassenR<realref>(N, Rref, Aref, Bref, 128);
+
+  std::cout<<"single   "; benchmark<float, realref, __float128>(N, sleafsize, Aq, Bq, Rref);
+  std::cout<<"double   "; benchmark<double, realref, __float128>(N, dleafsize, Aq, Bq, Rref);
+  std::cout<<"ldouble  "; benchmark<long double, realref, __float128>(N, ldleafsize, Aq, Bq, Rref);
+  std::cout<<"quad     "; benchmark<__float128, realref, __float128>(N, qleafsize, Aq, Bq, Rref);
+  std::cout<<"csingle  "; benchmark<freal<float>, realref, __float128>(N, csleafsize, Aq, Bq, Rref);
+  std::cout<<"cdouble  "; benchmark<freal<double>, realref, __float128>(N, cdleafsize, Aq, Bq, Rref);
+  std::cout<<"cldouble "; benchmark<freal<long double>, realref, __float128>(N, cldleafsize, Aq, Bq, Rref);
+
+  matfree<realref>(N,Aref);
+  matfree<realref>(N,Bref);
+  matfree<realref>(N,Rref);
+  matfree<__float128>(N,Aq);
+  matfree<__float128>(N,Bq);
+  matfree<__float128>(N,Rq);
 }
 

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <chrono>
 #include "force.hpp"
+#include "randomhelper.hpp"
 #include "mpfrcpp_tpl.h"
 
 typedef mpfrcpp<200> realref;
@@ -276,8 +277,8 @@ int main(int argc, char** argv) {
   __float128 **Rq = matalloc<__float128>(N);
   for(int i=0; i<N; i++) {
     for(int j=0; j<N; j++) {
-      Aq[i][j] = (i+j);
-      Bq[i][j] = 1.0/(1+i+j);
+      Aq[i][j] = rand_quad();
+      Bq[i][j] = rand_quad();
       Aref[i][j] = (realref)Aq[i][j];
       Bref[i][j] = (realref)Bq[i][j];
     }

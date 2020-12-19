@@ -51,7 +51,9 @@ inline TI rand_fl() {
   static std::uniform_int_distribution<int> exponent_distribution(-16,16);
   static std::uniform_int_distribution<TI> sign_distribution(0,1);
   TI mantissa = clearl<TI>(mantissa_distribution(mt), EL+1);
-  TI exponent = (((TI)1<<EL-1)-1+exponent_distribution(mt))<<ML;
+  TI exponent;
+  if(EL > 0) exponent = (((TI)1<<EL-1)-1+exponent_distribution(mt))<<ML;
+  else exponent = 0;
   TI sign = sign_distribution(mt)<<(ML+EL);
   TI num = mantissa | exponent | sign;
   return num;

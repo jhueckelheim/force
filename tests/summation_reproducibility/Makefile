@@ -1,5 +1,5 @@
 CC=g++
-CF=-I../../include/ -I$(MPFR_HOME)/include -L$(MPFR_HOME)/lib -O3 -std=c++11 -fopenmp -lquadmath -lmpfr
+CF=-I../../include/ -I$(MPFR_HOME)/include -L$(MPFR_HOME)/lib -O3 -std=c++11 -fopenmp -lquadmath -lmpfr -DMPFR
 
 run: ./exec_test_sum_nobranch
 	./exec_test_sum_nobranch 1000000 1000

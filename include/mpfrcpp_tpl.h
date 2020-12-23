@@ -56,6 +56,13 @@ public:
       mpfr_set_d(value,g1,MPFR_RNDN);
       return *this;
    }
+   mpfrcpp& operator=(const __float128 v) {
+      char buf[128];
+      quadmath_snprintf(buf, sizeof(buf), "%.36Qg", v);
+      mpfr_init2(value,MPFRPREC);
+      mpfr_set_str(value,buf,10,MPFR_RNDN);
+      return *this;
+   }
 };
 
 template<unsigned int fromprec, unsigned int toprec>

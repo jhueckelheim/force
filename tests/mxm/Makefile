@@ -1,20 +1,10 @@
 CC=g++
-CF=-I../../include/ -O3 -std=c++11 -fopenmp
+CF=-I../../include/ -I$(MPFR_HOME)/include -L$(MPFR_HOME)/lib -O3 -std=c++11 -fopenmp -lquadmath -lmpfr
 
-run: ./exec_test_mxm_single ./exec_test_mxm_double ./exec_test_mxm_freal
-	./exec_test_mxm_single
-	./exec_test_mxm_double
-	./exec_test_mxm_freal
+build: ./exec_test_mxm
 
-exec_test_operators: test_operators.cpp
+run: build
+	./exec_test_mxm
+
+exec_test_mxm: mxm.cpp
 	$(CC) $(CF) $^ -o $@
-
-exec_test_mxm_single: mxm.cpp
-	$(CC) $(CF) $^ -DLEAF_SIZE=4 -Dreal1=double -Dreal2=float -DN=128 -o $@
-
-exec_test_mxm_double: mxm.cpp
-	$(CC) $(CF) $^ -DLEAF_SIZE=4 -Dreal1=double -Dreal2=double -DN=128 -o $@
-
-exec_test_mxm_freal: mxm.cpp
-	$(CC) $(CF) $^ -DLEAF_SIZE=4 -Dreal1=double -Dreal2="freal<float>" -DN=128 -o $@
-

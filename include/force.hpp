@@ -243,5 +243,6 @@ std::ostream& operator<<(std::ostream &ost, const freal<T> &ad){
 
 #pragma omp declare reduction(+ : freal<float> : freal<float>::ompReduce(omp_out, omp_in))
 #pragma omp declare reduction(+ : freal<double> : freal<double>::ompReduce(omp_out, omp_in)) 
+#pragma omp declare reduction(+ : freal<long double> : freal<long double>::ompReduce(omp_out, omp_in)) 
 
 #endif

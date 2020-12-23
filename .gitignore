@@ -1,0 +1,5 @@
+exec_*
+HACCmk_*
+*.output
+*.error
+*.cobaltlog

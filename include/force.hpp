@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <math.h>
+#ifdef MPFR
+#include "mpfrcpp_tpl.h"
+#endif
 
 template<typename T>
 class freal{
@@ -45,10 +48,12 @@ class freal{
       return multiplication_error(a,b,x,(long double)4294967297.0L); //pow(2,mantissalength/2) + 1;
     }
 
+#ifdef MPFR
     template<unsigned int prec>
     static mpfrcpp<prec> multiplication_error(mpfrcpp<prec> a, mpfrcpp<prec> b, mpfrcpp<prec> x) {
       return multiplication_error(a,b,x,pow(mpfrcpp<prec>(2.0),prec/2)+mpfrcpp<prec>(1.0)); //pow(2,mantissalength/2) + 1;
     }
+#endif
 
     static T division_error(T a, T b, T x) {
       return (x*b - a - multiplication_error(x, b, x*b)) / b;
@@ -97,7 +102,7 @@ class freal{
     }
     void operator/=(const freal<T> rhs) {
       T recip = 1.0 / rhs.val;
-      T newval = this->val * recip;
+      T newval = this->val / rhs.val;
       T localerr = division_error(this->val,rhs.val,newval);
       this->val = newval;
       this->err = recip*this->err - recip*newval*rhs.err + localerr;
@@ -171,7 +176,7 @@ template<typename T>
 freal<T> operator/(const freal<T> &g1,const freal<T> &g2){
    T recip,newval;
    recip = (T)1.0 / g2.val;
-   newval = g1.val * recip;
+   newval = g1.val / g2.val;
    T localerr = freal<T>::division_error(g1.val,g2.val,newval);
    return freal<T>(newval,recip*g1.err - recip*newval*g2.err + localerr);
 }
